@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
+import android.media.AudioManager;
 
 import android.util.Log;
 import android.view.View;
@@ -59,6 +60,7 @@ public class SpeechRecognition extends CordovaPlugin {
   private Context context;
   private View view;
   private SpeechRecognizer recognizer;
+  private AudioManager audioManager;
 
   @Override
   public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -74,6 +76,8 @@ public class SpeechRecognition extends CordovaPlugin {
         recognizer = SpeechRecognizer.createSpeechRecognizer(activity);
         SpeechRecognitionListener listener = new SpeechRecognitionListener();
         recognizer.setRecognitionListener(listener);
+
+        audioManager = (AudioManager) activity.getSystemService(Context.AUDIO_SERVICE);
       }
     });
 
@@ -124,6 +128,14 @@ public class SpeechRecognition extends CordovaPlugin {
       }
 
       if (STOP_LISTENING.equals(action)) {
+        view.post(new Runnable() {
+          @Override
+          public void run() {
+            audioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
+            recognizer.cancel();
+          }
+        });
+
         this.callbackContext.success();
         return true;
       }
@@ -156,7 +168,7 @@ public class SpeechRecognition extends CordovaPlugin {
   }
 
   private void startListening(String language, int matches, String prompt, Boolean showPartial, Boolean showPopup) {
-    Log.d(LOG_TAG, "startListening() language: " + language + ", matches: " + matches + ", prompt: " + prompt + ", showPopup: " + showPopup);
+    Log.d(LOG_TAG, "startListening() language: " + language + ", matches: " + matches + ", prompt: " + prompt + ", showPartial: " + showPartial + ", showPopup: " + showPopup);
 
     final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
     intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -165,7 +177,7 @@ public class SpeechRecognition extends CordovaPlugin {
 
     if (showPartial)
       intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-      
+
     intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, matches);
     intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
             activity.getPackageName());
@@ -181,6 +193,7 @@ public class SpeechRecognition extends CordovaPlugin {
       view.post(new Runnable() {
         @Override
         public void run() {
+          audioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, true);
           recognizer.startListening(intent);
         }
       });
@@ -305,6 +318,8 @@ public class SpeechRecognition extends CordovaPlugin {
     @Override
     public void onReadyForSpeech(Bundle params) {
       Log.d(LOG_TAG, "onReadyForSpeech");
+      
+      audioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
     }
 
     @Override
