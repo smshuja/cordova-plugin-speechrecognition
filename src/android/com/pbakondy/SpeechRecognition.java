@@ -121,8 +121,9 @@ public class SpeechRecognition extends CordovaPlugin {
 
         Boolean showPartial = args.optBoolean(3, false);
         Boolean showPopup = args.optBoolean(4, true);
+        Boolean preferOffline = args.optBoolean(5, false);
 
-        startListening(lang, matches, prompt, showPartial, showPopup);
+        startListening(lang, matches, prompt, showPartial, showPopup, preferOffline);
 
         return true;
       }
@@ -167,8 +168,8 @@ public class SpeechRecognition extends CordovaPlugin {
     return SpeechRecognizer.isRecognitionAvailable(context);
   }
 
-  private void startListening(String language, int matches, String prompt, Boolean showPartial, Boolean showPopup) {
-    Log.d(LOG_TAG, "startListening() language: " + language + ", matches: " + matches + ", prompt: " + prompt + ", showPartial: " + showPartial + ", showPopup: " + showPopup);
+  private void startListening(String language, int matches, String prompt, Boolean showPartial, Boolean showPopup, Boolean preferOffline) {
+    Log.d(LOG_TAG, "startListening() language: " + language + ", matches: " + matches + ", prompt: " + prompt + ", showPartial: " + showPartial + ", showPopup: " + showPopup + ", preferOffline: " + preferOffline);
 
     final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
     intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -177,6 +178,9 @@ public class SpeechRecognition extends CordovaPlugin {
 
     if (showPartial)
       intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+
+    if (preferOffline)
+      intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
 
     intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, matches);
     intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,
