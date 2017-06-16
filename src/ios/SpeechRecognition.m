@@ -6,6 +6,7 @@
 
 #import <Cordova/CDV.h>
 #import <Speech/Speech.h>
+#import <Accelerate/Accelerate.h>
 
 #define DEFAULT_LANGUAGE @"en-US"
 #define DEFAULT_MATCHES 5
@@ -145,6 +146,29 @@
 
         [inputNode installTapOnBus:0 bufferSize:1024 format:format block:^(AVAudioPCMBuffer *buffer, AVAudioTime *when) {
             [self.recognitionRequest appendAudioPCMBuffer:buffer];
+
+            [buffer setFrameLength:1024];
+            UInt32 inNumberFrames = buffer.frameLength;
+
+            if (buffer.format.channelCount > 0)
+            {
+                Float32* floatChannel = (Float32*)buffer.floatChannelData[0];
+                Float32 maxValue = 0;
+                vDSP_maxmgv((Float32*)floatChannel, 1, &maxValue, inNumberFrames);
+                //NSLog(@"maxValue %f", maxValue);
+
+                UInt32 realVolume = ((maxValue) * 1000.0);
+                UInt32 volume = realVolume * (150.0 / 100.0);
+                //NSLog(@"volume %u", volume);
+                NSString *messageVolume = [NSString stringWithFormat:@"volume:%d", volume];
+                //NSLog(@"%@", messageVolume);
+
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:messageVolume];
+                [pluginResult setKeepCallbackAsBool:YES];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+
+            }
+
         }];
 
         [self.audioEngine prepare];

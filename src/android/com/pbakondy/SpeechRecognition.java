@@ -311,7 +311,6 @@ public class SpeechRecognition extends CordovaPlugin {
       try {
         PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONArray(matches));
         result.setKeepCallback(true);
-
         callbackContext.sendPluginResult(result);
       } catch (Exception e) {
         e.printStackTrace();
@@ -321,8 +320,7 @@ public class SpeechRecognition extends CordovaPlugin {
 
     @Override
     public void onReadyForSpeech(Bundle params) {
-      Log.d(LOG_TAG, "onReadyForSpeech");
-      
+      Log.d(LOG_TAG, "onReadyForSpeech");      
       audioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
     }
 
@@ -343,6 +341,10 @@ public class SpeechRecognition extends CordovaPlugin {
 
     @Override
     public void onRmsChanged(float rmsdB) {
+        double volume = 10*Math.pow(10,(rmsdB/10));
+        PluginResult result = new PluginResult(PluginResult.Status.OK, "volume:" + volume);
+        result.setKeepCallback(true);
+        callbackContext.sendPluginResult(result);
     }
 
     private String getErrorText(int errorCode) {
