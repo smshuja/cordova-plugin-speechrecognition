@@ -24,7 +24,7 @@
 @property (strong, nonatomic) AVAudioEngine *audioEngine;
 @property (strong, nonatomic) SFSpeechAudioBufferRecognitionRequest *recognitionRequest;
 @property (strong, nonatomic) SFSpeechRecognitionTask *recognitionTask;
-
+@property (strong, nonatomic) CDVInvokedUrlCommand *onRmsChangeCommand;
 @end
 
 
@@ -160,13 +160,13 @@
                 UInt32 realVolume = ((maxValue) * 1000.0);
                 UInt32 volume = realVolume * (150.0 / 100.0);
                 //NSLog(@"volume %u", volume);
-                NSString *messageVolume = [NSString stringWithFormat:@"volume:%d", volume];
+                NSString *messageVolume = [NSString stringWithFormat:@"%d", volume];
                 //NSLog(@"%@", messageVolume);
-
-                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:messageVolume];
-                [pluginResult setKeepCallbackAsBool:YES];
-                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-
+                if(self.onRmsChangeCommand) {
+                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:messageVolume];
+                    [pluginResult setKeepCallbackAsBool:YES];
+                    [self.commandDelegate sendPluginResult:pluginResult callbackId:self.onRmsChangeCommand.callbackId];
+                }
             }
 
         }];
@@ -261,6 +261,10 @@
             }];
         });
     }];
+}
+
+- (void)onRmsChange:(CDVInvokedUrlCommand*)command {
+    self.onRmsChangeCommand = command;
 }
 
 @end

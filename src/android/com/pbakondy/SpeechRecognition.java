@@ -45,6 +45,7 @@ public class SpeechRecognition extends CordovaPlugin {
   private static final String GET_SUPPORTED_LANGUAGES = "getSupportedLanguages";
   private static final String HAS_PERMISSION = "hasPermission";
   private static final String REQUEST_PERMISSION = "requestPermission";
+  private static final String ON_RMS_CHANGE = "onRmsChange";
 
   // android.speech.extra.MAX_RESULTS
   private static final int MAX_RESULTS = 5;
@@ -55,6 +56,7 @@ public class SpeechRecognition extends CordovaPlugin {
   private static final String RECORD_AUDIO_PERMISSION = Manifest.permission.RECORD_AUDIO;
 
   private CallbackContext callbackContext;
+  private CallbackContext onRmsChangeCallbackContext;
   private LanguageDetailsChecker languageDetailsChecker;
   private Activity activity;
   private Context context;
@@ -90,6 +92,10 @@ public class SpeechRecognition extends CordovaPlugin {
     Log.d(LOG_TAG, "execute() action " + action);
 
     try {
+      if (ON_RMS_CHANGE.equals(action)) {
+        this.onRmsChangeCallbackContext = callbackContext;
+        return true;
+      }
       if (IS_RECOGNITION_AVAILABLE.equals(action)) {
         boolean available = isRecognitionAvailable();
         PluginResult result = new PluginResult(PluginResult.Status.OK, available);
@@ -307,7 +313,7 @@ public class SpeechRecognition extends CordovaPlugin {
     public void onPartialResults(Bundle partialResults) {
       ArrayList<String> matches = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
       Log.d(LOG_TAG, "SpeechRecognitionListener partial results: " + matches);
-      
+
       try {
         PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONArray(matches));
         result.setKeepCallback(true);
@@ -320,7 +326,7 @@ public class SpeechRecognition extends CordovaPlugin {
 
     @Override
     public void onReadyForSpeech(Bundle params) {
-      Log.d(LOG_TAG, "onReadyForSpeech");      
+      Log.d(LOG_TAG, "onReadyForSpeech");
       audioManager.setStreamSolo(AudioManager.STREAM_VOICE_CALL, false);
     }
 
@@ -342,9 +348,9 @@ public class SpeechRecognition extends CordovaPlugin {
     @Override
     public void onRmsChanged(float rmsdB) {
         double volume = 10*Math.pow(10,(rmsdB/10));
-        PluginResult result = new PluginResult(PluginResult.Status.OK, "volume:" + volume);
+        PluginResult result = new PluginResult(PluginResult.Status.OK, String.valueOf(volume));
         result.setKeepCallback(true);
-        callbackContext.sendPluginResult(result);
+        onRmsChangeCallbackContext.sendPluginResult(result);
     }
 
     private String getErrorText(int errorCode) {

@@ -9,5 +9,6 @@
 - (void)getSupportedLanguages:(CDVInvokedUrlCommand*)command;
 - (void)hasPermission:(CDVInvokedUrlCommand*)command;
 - (void)requestPermission:(CDVInvokedUrlCommand*)command;
+- (void)onRmsChange:(CDVInvokedUrlCommand*)command;
 
 @end
